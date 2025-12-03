@@ -54,16 +54,19 @@ Route::middleware('auth')->group(function () {
     // Comentar
     Route::post('/post/{post}/comment', [PostController::class, 'storeComment'])->name('post.comment.store');
 
-    // Loja e Pedidos
-    // Carrinho e Checkout
+    // Carrinho e Checkout (Fluxo Novo)
     Route::get('/carrinho', [OrderController::class, 'cart'])->name('order.cart');
     Route::post('/checkout', [OrderController::class, 'store'])->name('order.store');
+    
+    // Gestão do Carrinho (Remover/Atualizar)
+    Route::delete('/order/item/{item}', [OrderController::class, 'removeItem'])->name('order.item.remove');
+    Route::patch('/order/item/{item}/update', [OrderController::class, 'updateItemQuantity'])->name('order.item.update');
+
+    // Finalização e Histórico
+    Route::put('/meus-pedidos/{order}/finalize', [OrderController::class, 'finalize'])->name('order.finalize');
     Route::get('/meus-pedidos', [OrderController::class, 'index'])->name('order.index');
     Route::get('/meus-pedidos/{order}', [OrderController::class, 'show'])->name('order.show');
     Route::post('/meus-pedidos/{order}/upload', [OrderController::class, 'uploadProof'])->name('order.upload_proof');
-    Route::put('/meus-pedidos/{order}/finalize', [OrderController::class, 'finalize'])->name('order.finalize');
-    Route::delete('/order/item/{item}', [OrderController::class, 'removeItem'])->name('order.item.remove');
-    Route::patch('/order/item/{item}/update', [OrderController::class, 'updateItemQuantity'])->name('order.item.update');
 });
 
 // === JORNADA 3: CRIADOR (Logado) ===
@@ -86,10 +89,14 @@ Route::middleware(['auth'])->prefix('criador')->name('creator.')->group(function
 });
 
 // === JORNADA 4: ADMIN (Logado + Admin) ===
-// Nota: O middleware 'admin' será criado no próximo passo
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    
+    // Gestão de Usuários
     Route::resource('/usuarios', AdminUserController::class);
+    // [CORREÇÃO] Esta é a linha que faltava para o erro sumir:
+    Route::get('/usuarios/{user}/login-as', [AdminUserController::class, 'loginAs'])->name('users.login-as');
+
     Route::resource('/comunidades', AdminCommunityController::class);
     Route::resource('/produtos', AdminProductController::class)->only(['index', 'edit', 'update', 'destroy']);
     Route::resource('/pedidos', AdminOrderController::class)->only(['index', 'show', 'update']);
